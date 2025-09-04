@@ -1,4 +1,48 @@
 // Core TypeScript interfaces for the application
+export interface Dto_Response {
+  responseCode: number
+  responseData: any
+  responseText:string
+}
+export interface DtoOut_Response {
+  sessionId: string
+  encPassword: string
+  clientTime: string
+}
+export interface DtoOut_Session {
+  response: Dto_Response
+}
+export interface DtoIn_Otp {
+  sessionId: string
+  otp: string
+}
+export interface DtoIn_Password {
+  sessionId: string
+  encPassword: string
+  clientTime: string
+}
+export interface RegisterUserReq {
+  natId: number
+  contact: string
+  birthDate: string
+  hostId: number
+  recommender: string
+  clientTime: string
+  mac: string
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 export interface Todo {
   id: number
   todo: string

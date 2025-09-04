@@ -1,26 +1,29 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
-import "./globals.css"
-import { AppProviders } from "../components/providers/app-providers"
+import type React from "react";
+import type { Metadata } from "next";
+import Script from "next/script";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import "./globals.css";
+import { AppProviders } from "../components/providers/app-providers";
 
 export const metadata: Metadata = {
-  title: "Task Manager Pro",
-  description: "Professional task management application built with Next.js, Redux Toolkit, and React Query",
+  title: "زرپال",
+  description:
+      "پلتفرم پرداخت با تسویه طلا",
   generator: "Next.js",
-}
+};
 
 export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
+                                     children,
+                                   }: Readonly<{
+  children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <html lang="fa" dir="rtl" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className={GeistSans.className}>
-        <AppProviders>{children}</AppProviders>
+      <Script src="https://api.tempo.build/proxy-asset?url=https://storage.googleapis.com/tempo-public-assets/error-handling.js" />
+      <AppProviders>{children}</AppProviders>
       </body>
-    </html>
-  )
+      </html>
+  );
 }

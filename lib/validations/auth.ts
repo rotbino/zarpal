@@ -9,8 +9,8 @@ export const loginSchema = z.object({
 });
 
 export const registerStepOneSchema = z.object({
-    firstName: z.string().min(2, "نام باید حداقل 2 کاراکتر باشد"),
-    lastName: z.string().min(2, "نام خانوادگی باید حداقل 2 کاراکتر باشد"),
+   /* firstName: z.string().min(2, "نام باید حداقل 2 کاراکتر باشد"),
+    lastName: z.string().min(2, "نام خانوادگی باید حداقل 2 کاراکتر باشد"),*/
     phone: z
         .string()
         .min(11, "شماره موبایل باید 11 رقم باشد")

@@ -35,6 +35,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/radix/input-otp";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/radix/select";
 import {
   registerStepOneSchema,
   registerStepTwoSchema,
@@ -45,6 +46,9 @@ import {
 } from "@/lib/validations/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {useTodos} from "@/lib/hooks/useTodos";
+import {useAuth} from "@/lib/hooks/useAth";
+import Image from "next/image";
 
 type RegisterStep = 1 | 2 | 3;
 
@@ -53,6 +57,7 @@ export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { registerUserReq, registerUserAut,registerUserPas,isPending } = useAuth()
   const [registrationData, setRegistrationData] = useState<
     Partial<RegisterStepOneData & RegisterStepTwoData & RegisterStepThreeData>
   >({});
@@ -83,46 +88,60 @@ export function RegisterForm() {
     },
   });
 
+
   const onStepOneSubmit = async (data: RegisterStepOneData) => {
-    setIsLoading(true);
+    setCurrentStep(2);
+
     try {
-      // Simulate API call to send OTP
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setRegistrationData((prev) => ({ ...prev, ...data }));
+      const res = await registerUserReq({
+        natId: 0,
+        contact: data.contact,
+        birthDate: "",
+        hostId: 0,
+        recommender: "",
+        clientTime: new Date().toISOString(),
+        mac: "mock-mac",
+      });
+      //setRegistrationData((prev: any) => ({ ...prev, ...data, sessionId: res.response.sessionId }));
       setCurrentStep(2);
     } catch (error) {
       console.error("Step 1 error:", error);
     } finally {
-      setIsLoading(false);
+
     }
   };
 
+  // مرحله ۲ - وارد کردن OTP
   const onStepTwoSubmit = async (data: RegisterStepTwoData) => {
-    setIsLoading(true);
+    setCurrentStep(3);
     try {
-      // Simulate API call to verify OTP
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setRegistrationData((prev) => ({ ...prev, ...data }));
+      await registerUserAut({
+        sessionId: registrationData.sessionId,
+        otp: data.otp,
+      });
+      //setRegistrationData((prev: any) => ({ ...prev, ...data }));
       setCurrentStep(3);
     } catch (error) {
       console.error("Step 2 error:", error);
     } finally {
-      setIsLoading(false);
+
     }
   };
 
+  // مرحله ۳ - تعیین پسورد
   const onStepThreeSubmit = async (data: RegisterStepThreeData) => {
-    setIsLoading(true);
+
     try {
-      // Simulate API call to complete registration
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const finalData = { ...registrationData, ...data };
-      console.log("Registration completed:", finalData);
-      router.push("/auth/login");
+      await registerUserPas({
+        sessionId: registrationData.sessionId,
+        encPassword: data.password,
+        clientTime: new Date().toISOString(),
+      });
+      router.replace("/login");
     } catch (error) {
       console.error("Step 3 error:", error);
     } finally {
-      setIsLoading(false);
+
     }
   };
 
@@ -162,145 +181,161 @@ export function RegisterForm() {
   );
 
   return (
-    <div className="bg-white min-h-screen">
-      <Card className="border-0 shadow-none bg-white rounded-none">
-        <CardHeader className="text-center pb-8 pt-12">
-          {/* Logo */}
-          <div className="mx-auto mb-6 w-24 h-24 bg-gradient-to-br from-yellow-400 via-orange-400 to-orange-500 rounded-3xl flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-3xl">دیجی</span>
-          </div>
-          <CardTitle className="text-3xl font-bold text-gray-900 mb-2">
+    <div className="bg-gray-50 min-h-screen">
+      <Card className="border-0 shadow-none  rounded-none">
+        <CardHeader className="relative w-full h-60 mb-0">
+          <Image
+              src="/images/logo.png"
+              alt="Logo"
+              fill
+              style={{ objectFit: "contain" }}
+          />
+        </CardHeader>
+
+        <CardHeader className="text-center pb-0 pt-0">
+          <CardTitle className="text-2xl font-bold text-gray-900">
             {currentStep === 1 && "ثبت نام"}
             {currentStep === 2 && "تایید شماره موبایل"}
             {currentStep === 3 && "تنظیم رمز عبور"}
           </CardTitle>
-          <CardDescription className="text-gray-600 text-lg">
+         {/* <CardDescription className="text-gray-600 text-lg">
             {currentStep === 1 && "اطلاعات شخصی خود را وارد کنید"}
             {currentStep === 2 &&
               "کد تایید ارسال شده به شماره موبایل را وارد کنید"}
             {currentStep === 3 && "رمز عبور خود را تنظیم کنید"}
-          </CardDescription>
+          </CardDescription>*/}
         </CardHeader>
 
-        <CardContent className="px-8">
+        <CardContent className="bg-gray-100 py-10 rounded-[12px]">
           {renderStepIndicator()}
 
           {currentStep === 1 && (
-            <Form {...stepOneForm}>
-              <form
-                onSubmit={stepOneForm.handleSubmit(onStepOneSubmit)}
-                className="space-y-8"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={stepOneForm.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-right block text-gray-700 text-lg font-medium mb-3">
-                          نام
-                        </FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <User className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-6 w-6" />
-                            <Input
-                              {...field}
-                              placeholder="نام خود را وارد کنید"
-                              className="pr-14 text-right bg-gray-50 border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 h-14 text-lg rounded-xl"
-                              dir="rtl"
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage className="text-right" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={stepOneForm.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-right block text-gray-700 text-lg font-medium mb-3">
-                          نام خانوادگی
-                        </FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <User className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-6 w-6" />
-                            <Input
-                              {...field}
-                              placeholder="نام خانوادگی خود را وارد کنید"
-                              className="pr-14 text-right bg-gray-50 border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 h-14 text-lg rounded-xl"
-                              dir="rtl"
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage className="text-right" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={stepOneForm.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-right block text-gray-700 text-lg font-medium mb-3">
-                        شماره موبایل
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Phone className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-6 w-6" />
-                          <Input
-                            {...field}
-                            type="tel"
-                            placeholder="09123456789"
-                            className="pr-14 text-right bg-gray-50 border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 h-14 text-lg rounded-xl"
-                            dir="rtl"
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-right" />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={stepOneForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-right block text-gray-700 text-lg font-medium mb-3">
-                        ایمیل (اختیاری)
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Mail className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-6 w-6" />
-                          <Input
-                            {...field}
-                            type="email"
-                            placeholder="example@email.com"
-                            className="pr-14 text-left bg-gray-50 border-2 border-gray-200 focus:border-purple-500 focus:ring-purple-500 h-14 text-lg rounded-xl"
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-right" />
-                    </FormItem>
-                  )}
-                />
-
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 text-lg rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+              <Form {...stepOneForm}>
+                <form
+                    onSubmit={stepOneForm.handleSubmit(onStepOneSubmit)}
+                    className="space-y-4"
                 >
-                  {isLoading ? "در حال ارسال..." : "ادامه"}
-                  <ArrowLeft className="mr-2 h-5 w-5" />
-                </Button>
-              </form>
-            </Form>
+                  {/* شماره همراه */}
+                  <FormField
+                      control={stepOneForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                  {...field}
+                                  type="tel"
+                                  placeholder="شماره همراه"
+                                  className="w-full h-12 rounded-md text-right bg-white border border-gray-300"
+                                  dir="rtl"
+                              />
+                            </FormControl>
+                            <FormMessage className="text-right text-red-500 text-sm" />
+                          </FormItem>
+                      )}
+                  />
+
+                  {/* کد ملی */}
+                  <FormField
+                      control={stepOneForm.control}
+                      name="nationalCode"
+                      render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                  {...field}
+                                  placeholder="کد ملی"
+                                  className="w-full h-12 rounded-md text-right bg-white border border-gray-300"
+                                  dir="rtl"
+                              />
+                            </FormControl>
+                            <FormMessage className="text-right text-red-500 text-sm" />
+                          </FormItem>
+                      )}
+                  />
+
+                  {/* تاریخ تولد */}
+                  <FormField
+                      control={stepOneForm.control}
+                      name="birthDate"
+                      render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                  {...field}
+                                  type="date"
+                                  placeholder="تاریخ تولد"
+                                  className="w-full h-12 rounded-md text-right bg-white border border-gray-300"
+                                  dir="rtl"
+                              />
+                            </FormControl>
+                            <FormMessage className="text-right text-red-500 text-sm" />
+                          </FormItem>
+                      )}
+                  />
+
+                  {/* پلتفرم مرجع */}
+                  <FormField
+                      control={stepOneForm.control}
+                      name="platform"
+                      render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <SelectTrigger
+                                    dir="rtl"
+                                    className="w-full h-12 rounded-md bg-white border border-gray-300 text-right py-6"
+                                >
+                                  <SelectValue placeholder="پلتفرم مرجع" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem    value="zaryal">زریال</SelectItem>
+                                  <SelectItem disabled    value="talasi">طلاسی</SelectItem>
+                                  <SelectItem  disabled  value="goldika">گلدیکا</SelectItem>
+                                  <SelectItem   disabled value="taline">طلاین</SelectItem>
+                                  <SelectItem  disabled value="meligold">ملی گلد</SelectItem>
+                                  <SelectItem  disabled value="walgold">وال گلد</SelectItem>
+                                  <SelectItem disabled  value="tokniko">توکنیکو</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage className="text-right text-red-500 text-sm" />
+                          </FormItem>
+                      )}
+                  />
+
+                  {/* کد معرف */}
+                  <FormField
+                      control={stepOneForm.control}
+                      name="refCode"
+                      render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                  {...field}
+                                  placeholder="کد معرف"
+                                  className="w-full h-12 rounded-md text-right bg-white border border-gray-300"
+                                  dir="rtl"
+                              />
+                            </FormControl>
+                            <FormMessage className="text-right text-red-500 text-sm" />
+                          </FormItem>
+                      )}
+                  />
+
+                  {/* دکمه ثبت */}
+                  <Button
+                      type="submit"
+                      disabled={isPending}
+                      className="w-full bg-[#A45C70] text-white font-bold h-12 rounded-md"
+                  >
+                    {isPending ? "در حال ارسال..." : "ثبت"}
+                    <ArrowLeft className="mr-2 h-5 w-5" />
+                  </Button>
+                </form>
+              </Form>
           )}
+
 
           {currentStep === 2 && (
             <Form {...stepTwoForm}>
@@ -377,10 +412,10 @@ export function RegisterForm() {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isPending}
                     className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold h-14 text-lg rounded-xl shadow-lg hover:shadow-xl"
                   >
-                    {isLoading ? "در حال تایید..." : "تایید"}
+                    {isPending ? "در حال تایید..." : "تایید"}
                     <ArrowLeft className="mr-2 h-5 w-5" />
                   </Button>
                 </div>
@@ -480,10 +515,10 @@ export function RegisterForm() {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isPending}
                     className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold h-14 text-lg rounded-xl shadow-lg hover:shadow-xl"
                   >
-                    {isLoading ? "در حال تکمیل..." : "تکمیل ثبت نام"}
+                    {isPending ? "در حال تکمیل..." : "تکمیل ثبت نام"}
                   </Button>
                 </div>
               </form>
@@ -494,7 +529,7 @@ export function RegisterForm() {
             <div className="text-center mt-8">
               <span className="text-gray-600 text-lg">حساب کاربری دارید؟ </span>
               <Link
-                href="/auth/login"
+                href="/login"
                 className="text-purple-600 hover:text-purple-800 font-bold text-lg"
               >
                 ورود

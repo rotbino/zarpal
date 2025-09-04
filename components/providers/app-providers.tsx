@@ -7,7 +7,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { store } from "../../lib/store/store"
 import { Toaster } from "../radix/toaster"
 import { ThemeProvider } from "../theme-provider"
-
+import { DirectionProvider } from "@radix-ui/react-direction";
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,8 +32,11 @@ export function AppProviders({ children }: AppProvidersProps) {
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
-          <Toaster />
+          <DirectionProvider dir="rtl">
+            {children}
+            <Toaster />
+          </DirectionProvider>
+
         </ThemeProvider>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
